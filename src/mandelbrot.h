@@ -22,10 +22,10 @@ Pixel valueToRGB(size_t value)
 
     Pixel pixel{};
 
-    pixel.red = static_cast<uint8_t>(9 * (1 - colourParam) * colourParam 
-    * colourParam * colourParam * 255);
-    pixel.green = static_cast<uint8_t>(16 * (1 - colourParam) * (1 - colourParam) 
+    pixel.red = static_cast<uint8_t>(16 * (1 - colourParam) * (1 - colourParam) 
     * colourParam * colourParam  *  255);
+    pixel.green = static_cast<uint8_t>(9 * (1 - colourParam) * colourParam 
+    * colourParam * colourParam * 255);
     pixel.blue = static_cast<uint8_t>(9 * (1 - colourParam) * (1 - colourParam) 
     * (1 - colourParam) * colourParam  *  255);
 
