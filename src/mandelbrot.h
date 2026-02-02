@@ -4,6 +4,8 @@
 #include "BMP.h"
 #include <cmath>
 #include <string>
+#include <thread>
+#include <algorithm>
 
 
 namespace MandelbrotConstants
@@ -12,8 +14,6 @@ namespace MandelbrotConstants
     const size_t imageWidth{3840};
     const size_t imageHeight{2160};
     const double maxNormSquare{4.0};
-
-    const double pi = std::acos(-1.0);
 }
 
 Pixel valueToRGB(size_t value)
@@ -88,6 +88,42 @@ public:
                 size_t value = mandelbrot1(ComplexNumber {real, imaginary});
                 m_image.getPixel(x, y) = valueToRGB(value);
             }
+        }
+    }
+
+    void genFractalThread(const int numThreads)
+    {
+        size_t scanPartiton = MandelbrotConstants::imageHeight / numThreads;
+
+        std::vector<std::thread> threads;
+        for (int i{0}; i < numThreads; ++i)
+        {
+            size_t start = i * scanPartiton;
+            size_t end = (i == scanPartiton) ? MandelbrotConstants::imageHeight : 
+            (i + 1) * scanPartiton;
+
+            threads.emplace_back([&, i, start, end]()
+            {
+                for (size_t y{start}; y < end; ++y)
+                {
+                    double imaginary = rescaling(MandelbrotConstants::imageHeight,
+                    m_verLower, m_verUpper, y);
+
+                    for (size_t x{0}; x < MandelbrotConstants::imageWidth; ++x)
+                    {
+                        double real = rescaling(MandelbrotConstants::imageWidth, 
+                        m_horLower, m_horUpper, x);
+                        size_t value = mandelbrot1(ComplexNumber {real, imaginary});
+                        m_image.getPixel(x, y) = valueToRGB(value);
+                    }
+
+                }
+            });
+        }
+
+        for (auto& t : threads)
+        {
+            t.join();
         }
     }
 
