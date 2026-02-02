@@ -49,10 +49,11 @@ size_t mandelbrot1(const ComplexNumber& num)
     return 0;
 }
 
-double rescaling(size_t pixelUpperBound, double lower, double upper, size_t pos)
+double rescaling(const size_t pixelUpperBound, double lower, double upper, size_t pos)
 {
     return ((upper - lower) / pixelUpperBound) * pos + lower;
 }
+
 
 class MandelbrotImage
 {
@@ -74,21 +75,12 @@ public:
         assert((horLower < horUpper) && (verLower < verUpper));
     }
 
+    friend void genBetweenScanlines(MandelbrotImage& mandelbrotBMP, 
+    size_t lowerScanLine, size_t upperScanLine);
+
     void genFractal()
     {
-        for (size_t x{0}; x < MandelbrotConstants::imageWidth; ++x)
-        {
-            double real = rescaling(MandelbrotConstants::imageWidth, m_horLower,
-            m_horUpper, x);
-            for (size_t y{0}; y < MandelbrotConstants::imageHeight; ++y)
-            {
-                double imaginary = rescaling(MandelbrotConstants::imageHeight,
-                m_verLower, m_verUpper, y);
-
-                size_t value = mandelbrot1(ComplexNumber {real, imaginary});
-                m_image.getPixel(x, y) = valueToRGB(value);
-            }
-        }
+        genBetweenScanlines(*this, 0, MandelbrotConstants::imageHeight);
     }
 
     void genFractalThread(const int numThreads)
@@ -102,23 +94,7 @@ public:
             size_t end = (i == scanPartiton) ? MandelbrotConstants::imageHeight : 
             (i + 1) * scanPartiton;
 
-            threads.emplace_back([&, i, start, end]()
-            {
-                for (size_t y{start}; y < end; ++y)
-                {
-                    double imaginary = rescaling(MandelbrotConstants::imageHeight,
-                    m_verLower, m_verUpper, y);
-
-                    for (size_t x{0}; x < MandelbrotConstants::imageWidth; ++x)
-                    {
-                        double real = rescaling(MandelbrotConstants::imageWidth, 
-                        m_horLower, m_horUpper, x);
-                        size_t value = mandelbrot1(ComplexNumber {real, imaginary});
-                        m_image.getPixel(x, y) = valueToRGB(value);
-                    }
-
-                }
-            });
+            threads.emplace_back([=]{genBetweenScanlines(*this, start, end);});
         }
 
         for (auto& t : threads)
@@ -133,3 +109,22 @@ public:
     }
     
 };
+
+void genBetweenScanlines(MandelbrotImage& mandelbrotBMP, 
+size_t lowerScanLine, size_t upperScanLine)
+{
+    for (size_t y{lowerScanLine}; y < upperScanLine; ++y)
+    {
+        double imaginary = rescaling(MandelbrotConstants::imageHeight,
+        mandelbrotBMP.m_verLower, mandelbrotBMP.m_verUpper, y);
+
+        for (size_t x{0}; x < MandelbrotConstants::imageWidth; ++x)
+        {
+            double real = rescaling(MandelbrotConstants::imageWidth, 
+            mandelbrotBMP.m_horLower, mandelbrotBMP.m_horUpper, x);
+            size_t value = mandelbrot1(ComplexNumber {real, imaginary});
+            mandelbrotBMP.m_image.getPixel(x, y) = valueToRGB(value);
+        }
+
+    }
+}
