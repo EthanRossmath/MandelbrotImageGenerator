@@ -109,7 +109,8 @@ private:
     //3. Writing pixel data to a .bmp file
     void writePixelData(std::ofstream& outf)
     {
-        // Need to create a padding vector consisting of #padding number of 0 bytes (could be anything)
+        // Need to create a padding vector consisting of #padding number of 0 
+        // bytes (could be anything)
         std::vector<uint8_t> paddingData(this->padding(), 0);
 
         //Taking the absolute value of height in case it's negative
@@ -122,7 +123,8 @@ private:
             int row = (m_infoHeader.imageHeight > 0) ? i : (absHeight - i - 1);
 
             // The write method requires character pointers as buffers to write into
-            char* row_pointer = reinterpret_cast<char*>(&m_imageData[row * m_infoHeader.imageWidth]);
+            char* row_pointer = reinterpret_cast<char*>(&m_imageData[row 
+            * m_infoHeader.imageWidth]);
             char* padding_pointer = reinterpret_cast<char*>(paddingData.data());
 
             // Writing the contents of row_pointer and padding_pointer into the file

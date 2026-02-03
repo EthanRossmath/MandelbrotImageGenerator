@@ -6,6 +6,7 @@
 #include <string>
 #include <thread>
 #include <algorithm>
+#include <future>
 
 
 namespace MandelbrotConstants
@@ -64,6 +65,24 @@ private:
     double m_verLower{};
     double m_verUpper{};
 
+    void genBetweenScanlines(size_t lowerScanLine, size_t upperScanLine)
+    {
+        for (size_t y{lowerScanLine}; y < upperScanLine; ++y)
+        {
+            double imaginary = rescaling(MandelbrotConstants::imageHeight,
+            m_verLower, m_verUpper, y);
+
+            for (size_t x{0}; x < MandelbrotConstants::imageWidth; ++x)
+            {
+                double real = rescaling(MandelbrotConstants::imageWidth, 
+                m_horLower, m_horUpper, x);
+                size_t value = mandelbrot1(ComplexNumber {real, imaginary});
+                m_image.getPixel(x, y) = valueToRGB(value);
+            }
+
+        }
+    }
+
 public:
     MandelbrotImage(double horLower, double horUpper, double verLower, double verUpper)
     : m_image{MandelbrotConstants::imageWidth, MandelbrotConstants::imageHeight}
@@ -75,26 +94,24 @@ public:
         assert((horLower < horUpper) && (verLower < verUpper));
     }
 
-    friend void genBetweenScanlines(MandelbrotImage& mandelbrotBMP, 
-    size_t lowerScanLine, size_t upperScanLine);
-
     void genFractal()
     {
-        genBetweenScanlines(*this, 0, MandelbrotConstants::imageHeight);
+        genBetweenScanlines(0, MandelbrotConstants::imageHeight);
     }
 
-    void genFractalThread(const int numThreads)
+    void genFractalThread(const size_t numThreads)
     {
-        size_t scanPartiton = MandelbrotConstants::imageHeight / numThreads;
+        const size_t scanPartiton = MandelbrotConstants::imageHeight / numThreads;
 
         std::vector<std::thread> threads;
-        for (int i{0}; i < numThreads; ++i)
+        for (size_t i{0}; i < numThreads; ++i)
         {
             size_t start = i * scanPartiton;
-            size_t end = (i == scanPartiton) ? MandelbrotConstants::imageHeight : 
+            size_t end = (i == numThreads - 1) ? MandelbrotConstants::imageHeight : 
             (i + 1) * scanPartiton;
 
-            threads.emplace_back([=]{genBetweenScanlines(*this, start, end);});
+            threads.emplace_back(&MandelbrotImage::genBetweenScanlines, this, 
+            start, end);
         }
 
         for (auto& t : threads)
@@ -103,28 +120,37 @@ public:
         }
     }
 
+    void genFractalFuture(const size_t numFutures)
+    {
+        const size_t scanPartiton = MandelbrotConstants::imageHeight / numFutures;
+
+        std::vector<std::future<void>> futures;
+        for (size_t i{0}; i < numFutures; ++i)
+        {
+            size_t start = i * scanPartiton;
+            size_t end = (i == numFutures - 1) ? MandelbrotConstants::imageHeight : 
+            (i + 1) * scanPartiton;
+
+            std::future<void> f = std::async(std::launch::async,
+                [&, i, start, end]() -> void
+                {
+                    genBetweenScanlines(start, end);
+                }
+            );
+
+            futures.push_back(std::move(f));
+        }
+
+        for (auto& f : futures)
+        {
+            f.get();
+        }
+    }
+
+
     void writeBMP(const std::string& fname)
     {
         m_image.write(fname);
     }
     
 };
-
-void genBetweenScanlines(MandelbrotImage& mandelbrotBMP, 
-size_t lowerScanLine, size_t upperScanLine)
-{
-    for (size_t y{lowerScanLine}; y < upperScanLine; ++y)
-    {
-        double imaginary = rescaling(MandelbrotConstants::imageHeight,
-        mandelbrotBMP.m_verLower, mandelbrotBMP.m_verUpper, y);
-
-        for (size_t x{0}; x < MandelbrotConstants::imageWidth; ++x)
-        {
-            double real = rescaling(MandelbrotConstants::imageWidth, 
-            mandelbrotBMP.m_horLower, mandelbrotBMP.m_horUpper, x);
-            size_t value = mandelbrot1(ComplexNumber {real, imaginary});
-            mandelbrotBMP.m_image.getPixel(x, y) = valueToRGB(value);
-        }
-
-    }
-}

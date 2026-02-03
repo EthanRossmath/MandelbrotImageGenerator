@@ -3,9 +3,9 @@
 
 int main()
 {
-    const int numThreads{8};
+    const int numFutures{8};
     MandelbrotImage mi{-2, 0.5, -1.2, 1.2};
-    mi.genFractalThread(numThreads);
+    mi.genFractalFuture(numFutures);
     //mi.genFractal();
 
     const std::filesystem::path outDir = "images";
