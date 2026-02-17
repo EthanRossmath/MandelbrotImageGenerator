@@ -203,9 +203,36 @@ public:
         }
     }
 
-    void genFractalOpenMP(const size_t numThreads)
+    // High-level OpenMP implementation
+    void genFractalOpenMP()
     {
 
+        #pragma omp parallel for collapse(2) schedule(runtime)
+        for (size_t y = 0; y < MandelbrotConstants::imageHeight; ++y)
+        {
+            // Need to rescale the vertical pixel coordinate (between 0 and 
+            // the image heigh specified in MandelbrotConstants) and the
+            // imaginary complex plane coordinate (specified by m_verLower and
+            // m_verUpper)
+            double imaginary = rescaling(MandelbrotConstants::imageHeight,
+            m_verLower, m_verUpper, y);
+
+            for (size_t x = 0; x < MandelbrotConstants::imageWidth; ++x)
+            {
+                // Similar scaling required for horizontal pixel coordinate
+                // to real complex plane coordinate
+                double real = rescaling(MandelbrotConstants::imageWidth, 
+                m_horLower, m_horUpper, x);
+
+                // Call the main mandelbrot set algorithm on rescaled real
+                // and imaginary coordinates, using custom complex number header
+                size_t value = mandelbrot1(ComplexNumber {real, imaginary});
+
+                // Call pixel colour generator using helper function.
+                m_image.getPixel(x, y) = valueToRGB(value);
+            }
+
+        }
     }
 
     // Call the .write method from the BMP class on m_image to generate image

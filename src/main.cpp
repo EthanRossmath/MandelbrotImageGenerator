@@ -8,10 +8,10 @@ int main()
 {
     // To create a Mandelbrot set, you need to first specify the bounds of the 
     // horizontal axis and the vertical axis.
-    const int horizontalLeftLimit{-2}; // horizontal lower bound
-    const int horizontalRightLimit{0.5}; // horizontal upper bound
-    const int verticalLowerLimit{-1.2}; // vertical lower bound
-    const int verticalUpperLimit{1.2}; // vertical upper bound
+    const double horizontalLeftLimit{-2}; // horizontal lower bound
+    const double horizontalRightLimit{0.5}; // horizontal upper bound
+    const double verticalLowerLimit{-1.2}; // vertical lower bound
+    const double verticalUpperLimit{1.2}; // vertical upper bound
 
     // A Mandelbrot set image is an object in the MandelbrotImage class defined 
     // in the header file mandelbrot.h
@@ -32,7 +32,7 @@ int main()
     // My machine has 8 cpu cores, so I would choose numThreads = 8.
 
     // The OpenMP-based implementation follows a similar syntax 
-    // mi.genFractalOpenMP(numThreads)
+    // mi.genFractalOpenMP()
 
     // Try using the other algorithms to compare the speed of these approaches.
 
