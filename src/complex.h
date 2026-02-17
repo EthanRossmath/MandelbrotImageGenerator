@@ -2,9 +2,12 @@
 #include <utility>
 #include <iostream>
 
+// Custom complex number library
+
 class ComplexNumber
 {
 private:
+    // Each complex number implemented as a pair for efficiency 
     std::pair<double, double> m_cx{0, 0};
 
 public:
@@ -28,6 +31,7 @@ public:
     }
 };
 
+// standard arithmetic operations
 ComplexNumber operator+(const ComplexNumber& num1, const ComplexNumber& num2)
 {
     return {num1.getReal() + num2.getReal(), num1.getImaginary() + num2.getImaginary()};
